@@ -1,12 +1,184 @@
-import geopandas as gpd
-from shapely.geometry import Polygon
-from pyproj import Proj, transform
 import math
+import pandas as pd
+import numpy as np
+import geopandas as gpd
+from osgeo import ogr
+from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
 from shapely.affinity import rotate
-from shapely.ops import unary_union
 
-def get_frame_grid(input_frame_shp, grid_output_shp, buffer_dist=2000, x_spacing=25000, y_spacing=10000):
+
+
+import os, sys
+from osgeo import ogr
+from math import ceil
+
+##UNDER CONSTRUCTION##
+#def fishnet_grid(out_polygon_wkt, ulx=1201773.8807996798, uly=5836508.814290593, lrx=1260860.5711285786, lry=5773457.291196505, x_spacing=19695.56344296628, y_spacing=10000):
+#
+#    dx = x_spacing/2
+#    dy = y_spacing/2
+#    xx, yy = np.meshgrid(np.arange(ulx-dx, lrx+dx, x_spacing),np.arange(lry-dy, uly-dy, y_spacing),)
+#    #drv = ogr.GetDriverByName('ESRI Shapefile')
+#    #dest_srs = ogr.osr.SpatialReference()
+#    #dest_srs.ImportFromEPSG(3857)
+#    #ds = drv.CreateDataSource(output_shapefile)
+#    #lyr = ds.CreateLayer(output_shapefile, dest_srs, geom_type=ogr.wkbPolygon)
+#    #fdefn = lyr.GetLayerDefn()
+#    for x,y in zip(xx.ravel(), yy.ravel()):
+#        out_polygon_wkt = f" POLYGON (({x+dx} {y+dy},{x-dx} {y+dy}, {x-dx} {y-dy}, {x+dx} {y-dy}, {x+dx} {y+dy}))"
+#        #ft = ogr.Feature(fdefn)
+#        #ft.SetGeometry(ogr.CreateGeometryFromWkt(poly_wkt))
+#        #lyr.CreateFeature(ft)
+#        #ft = None
+#    #lyr = None
+#    #ds = None
+##UNDER CONSTRUCTION
+
+def get_frame_grid(input_frame_shp, grid_output_shp, buffer_dist=2000, x_frame_split=3, y_spacing=10000):
+    # Step 1: Read the polygon shapefile
+    gdf = gpd.read_file(input_frame_shp)
+    orig_crs = gdf.crs
+    
+    # Step 2: Convert to EPSG:3857
+    gdf = gdf.to_crs(epsg=3857)
+
+    # Step 3: If required generates a buffer of the polygon 
+    if buffer_dist:
+        buffered_polygons = gdf.geometry.buffer(buffer_dist, cap_style=3, join_style=2)
+        gdf = gpd.GeoDataFrame(geometry=buffered_polygons, crs=gdf.crs)
+    
+    # Step 4: Iterate through each geometry
+    grid_gdf_list = []
+    for idx, geometry in enumerate(gdf['geometry']):
+        # Step 5: Get the tilt angle of the boundary polygon
+        # Calculate the angle between one of the sides of the rectangle and the x-axis.
+        rectangle = geometry
+        p1, p2 = rectangle.exterior.coords[0], rectangle.exterior.coords[1]
+        angle = math.degrees(math.atan2(p2[1] - p1[1], p2[0] - p1[0]))
+        
+        # Step 6: Rotate the boundary polygon to be north up
+        centroid = (geometry.centroid.x, geometry.centroid.y)
+        rotated_geometry = rotate(geometry, -angle, origin=centroid)
+        
+        # Step 7: Get extent coordinates
+        min_x, min_y, max_x, max_y = rotated_geometry.bounds
+        
+        # Step 8: Create a grid inside the polygon boundary
+        if buffer_dist:
+            xmin, ymin, xmax, ymax = min_x, min_y + (buffer_dist + 4700), max_x, max_y
+        else:
+            #xmin, ymin, xmax, ymax = min_x, min_y + 4700, max_x, max_y
+            xmin, ymin, xmax, ymax = min_x, min_y, max_x, max_y
+        x_spacing = (xmax-xmin)/x_frame_split
+        # Create a grid of polygons
+        
+        grid_polygons = []
+        for x in range(int(xmin), int((xmax)-int(x_spacing)), int(x_spacing)):
+            for y in range(int(ymin), int((ymax)-int(y_spacing)), int(y_spacing)):
+                grid_square = Polygon([(x, y), (x + x_spacing, y), (x + x_spacing, y + y_spacing), (x, y + y_spacing)])
+                grid_polygons.append(grid_square)
+
+        # Create a GeoDataFrame from the grid polygons
+        grid_gdf = gpd.GeoDataFrame(geometry=grid_polygons, crs=gdf.crs)
+        
+        # Step 9: Rotate back and reproject the grid with the original tilt and coordinate reference system
+        rotated_geometries = [rotate(geometry, angle, origin=centroid) for geometry in grid_gdf['geometry']]
+        grid_gdf['geometry'] = rotated_geometries
+
+        # Step 10: Shift the grid polygons to the center of the original frame polygon
+        grid_gdf_dissolve = grid_gdf.dissolve()
+        grid_centroid = (grid_gdf_dissolve["geometry"].centroid.x, grid_gdf_dissolve["geometry"].centroid.y)
+        centroid_x_offset = centroid[0] - grid_centroid[0]
+        centroid_y_offset = centroid[1] - grid_centroid[1]
+        grid_gdf = grid_gdf.translate(xoff=float(centroid_x_offset), yoff=float(centroid_y_offset))
+#        grid_gdf = grid_gdf.translate(xoff=centroid_x_offset, yoff=centroid_y_offset)
+
+        # Append to the list
+        grid_gdf_list.append(grid_gdf)
+
+    # Combine all grid GeoDataFrames
+    final_grid_gdf = gpd.GeoDataFrame(geometry=pd.concat(grid_gdf_list), crs=gdf.crs)
+    
+    # Step 11: Export the grid to shapefile
+    final_grid_gdf.to_file(grid_output_shp)
+
+
+def OBSOLETE_2_get_frame_grid(input_frame_shp, grid_output_shp, buffer_dist=2000, x_spacing=25000, y_spacing=10000):
+    # Step 1: Read the polygon shapefile
+    gdf = gpd.read_file(input_frame_shp)
+    orig_crs = gdf.crs
+    
+    # Step 2: Convert to EPSG:3857
+    gdf = gdf.to_crs(epsg=3857)
+
+    # Step 3: If required generates a buffer of the polygon 
+    if buffer_dist:
+        buffered_polygons = gdf.geometry.buffer(buffer_dist, cap_style=3, join_style=2)
+        gdf = gpd.GeoDataFrame(geometry=buffered_polygons, crs=gdf.crs)
+    
+    # Step 4: Iterate through each geometry
+    grid_gdf_list = []
+    for idx, geometry in enumerate(gdf['geometry']):
+        # Step 5: Get the tilt angle of the boundary polygon
+        # Calculate the angle between one of the sides of the rectangle and the x-axis.
+        rectangle = geometry
+        p1, p2 = rectangle.exterior.coords[0], rectangle.exterior.coords[1]
+        angle = math.degrees(math.atan2(p2[1] - p1[1], p2[0] - p1[0]))
+        
+        # Step 6: Rotate the boundary polygon to be north up
+        centroid = (geometry.centroid.x, geometry.centroid.y)
+        rotated_geometry = rotate(geometry, -angle, origin=centroid)
+        
+        # Step 7: Get extent coordinates
+        min_x, min_y, max_x, max_y = rotated_geometry.bounds
+        
+        # Step 8: Create a grid inside the polygon boundary
+        if buffer_dist:
+            xmin, ymin, xmax, ymax = min_x, min_y + (buffer_dist + 4700), max_x, max_y
+        else:
+            #xmin, ymin, xmax, ymax = min_x, min_y + 4700, max_x, max_y
+            xmin, ymin, xmax, ymax = min_x, min_y, max_x, max_y
+        
+        # Create a grid of polygons
+        grid_polygons = []
+        for x in range(int(xmin), int(xmax), int(x_spacing)):
+            for y in range(int(ymin), int(ymax), int(y_spacing)):
+                grid_square = Polygon([(x, y), (x + x_spacing, y), (x + x_spacing, y + y_spacing), (x, y + y_spacing)])
+                grid_polygons.append(grid_square)
+
+        # Create a GeoDataFrame from the grid polygons
+        grid_gdf = gpd.GeoDataFrame(geometry=grid_polygons, crs=gdf.crs)
+        
+        # Step 9: Rotate back and reproject the grid with the original tilt and coordinate reference system
+        rotated_geometries = [rotate(geometry, angle, origin=centroid) for geometry in grid_gdf['geometry']]
+        grid_gdf['geometry'] = rotated_geometries
+
+        # Step 10: Shift the grid polygons to the center of the original frame polygon
+        grid_gdf_dissolve = grid_gdf.dissolve()
+        grid_centroid = (grid_gdf_dissolve["geometry"].centroid.x, grid_gdf_dissolve["geometry"].centroid.y)
+        centroid_x_offset = centroid[0] - grid_centroid[0]
+        centroid_y_offset = centroid[1] - grid_centroid[1]
+		grid_gdf = grid_gdf.translate(xoff=float(centroid_x_offset), yoff=float(centroid_y_offset))
+#        grid_gdf = grid_gdf.translate(xoff=centroid_x_offset, yoff=centroid_y_offset)
+
+        # Append to the list
+        grid_gdf_list.append(grid_gdf)
+
+    # Combine all grid GeoDataFrames
+    final_grid_gdf = gpd.GeoDataFrame(geometry=pd.concat(grid_gdf_list), crs=gdf.crs)
+    
+    # Step 11: Export the grid to shapefile
+    final_grid_gdf.to_file(grid_output_shp)
+
+
+
+
+
+
+
+####SINGLE FRAME INPUT VERSION####
+def OBSOLETE_get_frame_grid(input_frame_shp, grid_output_shp, buffer_dist=2000, x_spacing=25000, y_spacing=10000):
     # Step 1: Read the polygon shapefile
     gdf = gpd.read_file(input_frame_shp)
     orig_crs = gdf.crs
