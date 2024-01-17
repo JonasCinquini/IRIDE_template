@@ -105,10 +105,8 @@ def get_frame_grid(input_frame_shp, grid_output_shp, buffer_dist=None, x_frame_s
         grid_gdf = gpd.read_file(get_fishnet_grid(f"fishnet_{idx}_{os.path.basename(grid_output_shp)}", xmin, ymin, xmax, ymax, gridWidth=x_spacing,gridHeight=y_spacing))
 
         # Step 9: Rotate back and reproject the grid with the original tilt and coordinate reference system
-		
         rotated_geometries = [rotate(geometry, angle, origin=centroid) for geometry in grid_gdf['geometry']]
         grid_gdf['geometry'] = rotated_geometries
-		
         # Step 10: Shift the grid polygons to the center of the original frame polygon
         grid_gdf_dissolve = grid_gdf.dissolve()
         grid_centroid = (grid_gdf_dissolve["geometry"].centroid.x, grid_gdf_dissolve["geometry"].centroid.y)

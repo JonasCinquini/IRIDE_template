@@ -159,8 +159,8 @@ def OBSOLETE_2_get_frame_grid(input_frame_shp, grid_output_shp, buffer_dist=2000
         grid_centroid = (grid_gdf_dissolve["geometry"].centroid.x, grid_gdf_dissolve["geometry"].centroid.y)
         centroid_x_offset = centroid[0] - grid_centroid[0]
         centroid_y_offset = centroid[1] - grid_centroid[1]
-		grid_gdf = grid_gdf.translate(xoff=float(centroid_x_offset), yoff=float(centroid_y_offset))
-#        grid_gdf = grid_gdf.translate(xoff=centroid_x_offset, yoff=centroid_y_offset)
+        grid_gdf = grid_gdf.translate(xoff=float(centroid_x_offset), yoff=float(centroid_y_offset))
+        #        grid_gdf = grid_gdf.translate(xoff=centroid_x_offset, yoff=centroid_y_offset)
 
         # Append to the list
         grid_gdf_list.append(grid_gdf)
