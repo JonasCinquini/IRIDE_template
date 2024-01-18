@@ -73,9 +73,9 @@ def get_frame_grid(input_frame_shp, grid_output_shp, buffer_dist=None, x_frame_s
         grid_gdf = get_fishnet_grid(xmin, ymin, xmax, ymax, gridWidth=x_spacing,gridHeight=y_spacing)
 
         # Step 9: Rotate back and reproject the grid with the original tilt and coordinate reference system
-		
         rotated_geometries = [rotate(geometry, angle, origin=centroid) for geometry in grid_gdf['geometry']]
         grid_gdf['geometry'] = rotated_geometries
+<<<<<<< HEAD
 
 #        # Step 10: Shift the grid polygons to the center of the original frame polygon
 #        grid_gdf_dissolve = grid_gdf.dissolve()
@@ -83,6 +83,14 @@ def get_frame_grid(input_frame_shp, grid_output_shp, buffer_dist=None, x_frame_s
 #        centroid_x_offset = centroid[0] - grid_centroid[0]
 #        centroid_y_offset = centroid[1] - grid_centroid[1]
 #        grid_gdf = grid_gdf.translate(xoff=float(centroid_x_offset), yoff=float(centroid_y_offset))
+=======
+        # Step 10: Shift the grid polygons to the center of the original frame polygon
+        grid_gdf_dissolve = grid_gdf.dissolve()
+        grid_centroid = (grid_gdf_dissolve["geometry"].centroid.x, grid_gdf_dissolve["geometry"].centroid.y)
+        centroid_x_offset = centroid[0] - grid_centroid[0]
+        centroid_y_offset = centroid[1] - grid_centroid[1]
+        grid_gdf = grid_gdf.translate(xoff=float(centroid_x_offset), yoff=float(centroid_y_offset))
+>>>>>>> a3ede35e717792e4dcc82a294b7c7fa0ba8c2a19
 
         # Append to the list
         grid_gdf_list.append(grid_gdf)

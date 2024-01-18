@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <TILE>
+    <product_id>S3-01-SNT-03</product_id>                # - Products ID
+    #<description>"2D Deformation East-West and Vertical"</description>        # - Product Name
+    <provider>e</provider>                               # - Data Provider: e = eGeos
+    <production_date>20240111</production_date>          # - Production Date
+    <start_date>20180105</start_date>                    # - Reference Period Start and End Date
+    <end_date>20221228</end_date>
+    <ew_coords>4300000</ew_coords>                            # - East-West, North-South coordinates of the upper-left corner of the tile in EPSG:3035
+    <ns_coords>1800000</ns_coords>
+    <dem>                                       
+        <version>COP-DEM_GLO-30/2020_1</version>         # - DEM used for geocoding
+    </dem>
+    <gnss>                                               # - gnss used for Calibration
+        <version>2.0</version>
+    </gnss>
+    <tile_perimeter>POLYGON ((4300000 1900000, 4300000 2000000, 4400000 2000000, 4400000 1900000, 4300000 1900000))</tile_perimeter>
+     <crs>EPSG:4326</crs>      # - Coordinate Reference System
+</TILE>
