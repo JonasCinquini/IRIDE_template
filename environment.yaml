@@ -1,0 +1,23 @@
+name: iride_template
+channels:
+  - conda-forge
+dependencies:
+  - cartopy
+  - gdal
+  - matplotlib
+  - netCDF4
+  - numpy
+  - pip
+  - pyproj
+  - pyyaml
+  - scipy
+  - setuptools_scm
+  - pandas
+  - geopandas
+  - shapely
+  - rasterio
+  - xarray
+  - flake8
+  - pytest
+  - pydantic
+  - pytest-cov
