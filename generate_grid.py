@@ -71,18 +71,15 @@ def main() -> None:
     args = parser.parse_args()
 
     # - set path to input shapefile
-    # input_shapefile = args.input_file
-    input_shapefile \
-        = os.path.join('.', 'data', 'csk_frame_map_italy_epsg4326_dissolve',
-                       'csk_frame_map_italy_epsg4326_dissolve.shp')
-
+    input_shapefile = args.input_file
+    #input_shapefile \
+    #    = os.path.join('.', 'data', 'csk_frame_map_italy_epsg4326_dissolve',
+    #                   'csk_frame_map_italy_epsg4326_dissolve.shp')
     output_f_name \
-        = input_shapefile.split(os.sep)[-1].replace('dissolve.shp',
-                                                    'atgrid.shp')
-
+        = os.path.basename(input_shapefile).replace('.shp','_grid.shp')
     # - set path to output shapefile
-    #out_dir = args.out_dir
-    out_dir = os.path.join(r'C:\Users\e.ciraci\Desktop\test')
+    out_dir = args.out_dir
+    #out_dir = os.path.join(r'C:\Users\e.ciraci\Desktop\test')
     os.makedirs(out_dir, exist_ok=True)
 
     # - import input data
