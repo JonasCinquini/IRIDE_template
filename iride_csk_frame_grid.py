@@ -16,9 +16,11 @@ from iride_csk_frame_grid_utils import (reproject_geodataframe,
                                         create_grid_within_polygon,
                                         add_frame_code_field)
 
+
 def grid_from_area(input_shapefile: str, output_folder: str,
-                   buffer_dist:float=None, x_frame_split: int=3,
-                   y_frame_split: int=6, dissolve: bool=False) -> list[str]:
+                   buffer_dist: float = None, x_frame_split: int = 3,
+                   y_frame_split: int = 6, dissolve: bool = False) \
+        -> list[str]:
     """
     Process a shapefile, create grids within polygons, and save the result
     to separate shapefiles.

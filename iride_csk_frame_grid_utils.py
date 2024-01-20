@@ -45,7 +45,8 @@ def add_frame_code_field(grid_gdf):
     return grid_gdf
 
 
-def reproject_geodataframe(gdf, target_epsg):
+def reproject_geodataframe(gdf: gpd.GeoDataFrame, target_epsg: int) \
+        -> gpd.GeoDataFrame:
     """
     Projects a Shapely polygon within a GeoDataFrame to a target EPSG code.
 
@@ -83,7 +84,8 @@ def reproject_geodataframe(gdf, target_epsg):
     return gdf_copy
 
 
-def get_fishnet_grid(xmin, ymin, xmax, ymax, gridWidth, gridHeight):
+def get_fishnet_grid(xmin: float, ymin: float, xmax: float, ymax: float,
+                     gridWidth: float, gridHeight: float) -> gpd.GeoDataFrame:
     """
     Generate a fishnet grid of polygons within the specified bounding box.
 
@@ -120,6 +122,7 @@ def get_fishnet_grid(xmin, ymin, xmax, ymax, gridWidth, gridHeight):
     gdf = gpd.GeoDataFrame(geometry=polygons, crs='EPSG:3857')
     return gdf
 
+
 def rotate_polygon_to_north_up(geometry):
     """
     Rotate a polygon to align its orientation with the north.
@@ -132,7 +135,7 @@ def rotate_polygon_to_north_up(geometry):
         angle (float): Angle of rotation.
     """
     exterior_coords_list = geometry.exterior.coords[:-1]
-    p1 = min(exterior_coords_list, key=lambda t:t[0])
+    p1 = min(exterior_coords_list, key=lambda t: t[0])
     ind_p1 = exterior_coords_list.index(p1)
     p2 = exterior_coords_list[ind_p1+1]
 
@@ -141,6 +144,7 @@ def rotate_polygon_to_north_up(geometry):
     rotated_geometry = rotate(geometry, -angle, origin=centroid)
 
     return rotated_geometry, angle
+
 
 def create_grid_within_polygon(geometry, x_frame_split, y_frame_split):
     """
@@ -173,6 +177,7 @@ def create_grid_within_polygon(geometry, x_frame_split, y_frame_split):
 
     grid_gdf['geometry'] = rotated_geometries
     return grid_gdf
+
 
 def grid_gdf_shift(input_gdf: gpd.GeoDataFrame,
                    x_y_reference: tuple) -> gpd.GeoDataFrame:
