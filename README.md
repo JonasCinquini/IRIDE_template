@@ -62,6 +62,8 @@ NOTE 1: PS/DS products will be cropped using the grid, not the input SAR data. T
 NOTE 2: the case presented below constitutes an example of the grid we will generate and distribute. We will likely define a grid with larger cells.
 
 <img src="images/csk_frame_grid.png" class="align-center" style="width:50.0%" alt="image" />
+<img src="images/csk_frame_grid_zoom.png" class="align-center" style="width:50.0%" alt="image" />
+
 ---
 
 # Metadata
