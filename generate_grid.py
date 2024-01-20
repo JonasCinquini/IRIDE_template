@@ -75,6 +75,8 @@ def main() -> None:
     #input_shapefile \
     #    = os.path.join('.', 'data', 'csk_frame_map_italy_epsg4326_dissolve',
     #                   'csk_frame_map_italy_epsg4326_dissolve.shp')
+    output_f_name \
+        = os.path.basename(input_shapefile).replace('.shp','_grid.shp')
     # - set path to output shapefile
     out_dir = args.out_dir
     #out_dir = os.path.join(r'C:\Users\e.ciraci\Desktop\test')
