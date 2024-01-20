@@ -4,6 +4,10 @@ January 2024
 
 Process a shapefile, create grids within polygons, and save the result
 to separate shapefiles.
+
+Python Dependencies
+geopandas: Open source project to make working with geospatial data
+    in python easier: https://geopandas.org
 """
 
 import os
