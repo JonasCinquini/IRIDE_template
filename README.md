@@ -1,6 +1,12 @@
 IRIDE Service Segment Lot 2
 ---
+[![Language][]][1]
+[![License][]][1]
+
+---
 ### Naming Convention and Metadata
+
+---
 
 #### Naming Convention - SE-S3-01
 **S3_01_SNT_01**
@@ -44,10 +50,23 @@ Naming convention:
 Example:
 ISS Product Name: ISS_S301SNT04_20180101_20220101_015A_01
 
+---
+**COSMO-SkyMed**
 
-#### Sentinel-1
+In this case, InSAR data generated per each of the considered CSK frames will be distributed employing a track-specific grid (i.e., once generated, the PS data is cropped using a grid aligned with the satellite track - see figures below). 
 
-#### Metadata
+A unique ID will identify each grid cell.
+
+NOTE 1: PS/DS products will be cropped using the grid, not the input SAR data. The PS calculation will still be performed at the frame level.
+
+NOTE 2: the case presented below constitutes an example of the grid we will generate and distribute. We will likely define a grid with larger cells.
+
+<img src="images/csk_frame_grid.png" class="align-center" style="width:50.0%" alt="image" />
+---
+
+# Metadata
+### Sentinel-1
+
 - **ISS_S301SNT01_2018-01-05_2022-12-28_08710208VVA_01.csv** - metadata file example for **S3-01-SNT-01** geospatial products.
 - **ISS_S301SNT03_20180105_20221228_100ME43N18V_01.csv** - metadata file example for **S3-01-SNT-03** geospatial thematic products.
 
@@ -145,3 +164,39 @@ ISS Product Name: ISS_S301SNT04_20180101_20220101_015A_01
 | Mattinata_D           | MTI_D |
 | ColliAlbani_A         | COA_A |
 | ColliAlbani_D         | COA_D |
+
+----
+### Setup Python Environment
+
+1. Setup minimal **conda** installation using [Miniconda][]
+
+2. Create Python Virtual Environment
+
+    > -   Creating an environment with commands ([Link][]);
+    > -   Creating an environment from an environment.yml file
+    >     ([Link][2])  -> **Recommended**;
+
+#### PYTHON DEPENDENCIES:
+- [gdal: Python's GDAL binding.][]
+- [fiona: Fiona is GDAL’s neat and nimble vector API for Python programmers.][]
+- [numpy: The fundamental package for scientific computing with Python.][]
+- [pandas: Python Data Analysis Library.][]
+- [geopandas: add support for geographic data to pandas objects.][]
+- [matplotlib: Library for creating static, animated, and interactive visualizations in Python.][]
+
+
+[Language]: https://img.shields.io/badge/python-%3E%3D%203.10-blue
+[License]: https://img.shields.io/bower/l/MI
+[1]: ..%20image::%20https://www.python.org/
+
+[xarray: Labelled multi-dimensional arrays in Python.]:https://docs.xarray.dev
+[rasterio: access to geospatial raster data]:https://rasterio.readthedocs.io/en/latest/
+[gdal: Python's GDAL binding.]: https://gdal.org/index.html
+[tqdm: A Fast, Extensible Progress Bar for Python and CLI.]: https://github.com/tqdm/tqdm
+[necdft4: Provides an object-oriented python interface to the netCDF version 4 library.]:https://pypi.org/project/netCDF4/
+[fiona: Fiona is GDAL’s neat and nimble vector API for Python programmers.]:https://fiona.readthedocs.io/en/latest/
+[numpy: The fundamental package for scientific computing with Python.]:https://numpy.org
+[PyTMD: Python package for the analysis of tidal data.]: https://github.com/tsutterley/pyTMD
+[pandas: Python Data Analysis Library.]:https://pandas.pydata.org/
+[geopandas: add support for geographic data to pandas objects.]:https://geopandas.org/en/stable/
+[matplotlib: Library for creating static, animated, and interactive visualizations in Python.]:https://matplotlib.org
