@@ -168,15 +168,6 @@ NOTE 2: the case presented below constitutes an example of the grid we will gene
 | ColliAlbani_D         | COA_D |
 
 ----
-### Setup Python Environment
-
-1. Setup minimal **conda** installation using [Miniconda][]
-
-2. Create Python Virtual Environment
-
-    > -   Creating an environment with commands ([Link][]);
-    > -   Creating an environment from an environment.yml file
-    >     ([Link][2])  -> **Recommended**;
 
 #### PYTHON DEPENDENCIES:
 - [gdal: Python's GDAL binding.][]
