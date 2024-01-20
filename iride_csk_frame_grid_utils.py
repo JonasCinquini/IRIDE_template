@@ -1,3 +1,19 @@
+u"""
+Written by Jonas Cinquini
+January 2024
+
+Set of Utilities to process a shapefile, create grids within polygons,
+and save the result.
+
+Python Dependencies
+geopandas: Open source project to make working with geospatial data
+    in python easier: https://geopandas.org
+pyproj: Python interface to PROJ (cartographic projections and coordinate
+    transformations library):
+    https://pyproj4.github.io/pyproj/stable/index.html
+shapely: Python package for manipulation and analysis of planar geometric
+    objects: https://shapely.readthedocs.io/en/stable/
+"""
 import math
 import geopandas as gpd
 from pyproj import CRS, Transformer
@@ -9,16 +25,19 @@ from math import ceil
 
 def add_frame_code_field(grid_gdf):
     """
-    Add a new field "f_code" to the grid GeoDataFrame and populate each polygon with a code.
+    Add a new field "f_code" to the grid GeoDataFrame and populate
+    each polygon with a code.
 
     Parameters:
-        grid_gdf (GeoDataFrame): Input GeoDataFrame containing the grid polygons.
+        grid_gdf (GeoDataFrame): Input GeoDataFrame containing
+            the grid polygons.
 
     Returns:
         GeoDataFrame: GeoDataFrame with the added "f_code" field.
     """
     # Sort the polygons based on their coordinates
-    sorted_polygons = sorted(grid_gdf['geometry'], key=lambda geom: (geom.bounds[1], geom.bounds[0]))
+    sorted_polygons = sorted(grid_gdf['geometry'],
+                             key=lambda geom: (geom.bounds[1], geom.bounds[0]))
 
     # Add a new field "f_code" and populate with codes
     grid_gdf['f_code'] = range(1, len(grid_gdf) + 1)
@@ -26,9 +45,10 @@ def add_frame_code_field(grid_gdf):
     return grid_gdf
 
 
-def reproject_geodataframe(gdf, target_epsg):
+def reproject_geodataframe(gdf: gpd.GeoDataFrame, target_epsg: int) \
+        -> gpd.GeoDataFrame:
     """
-    Reprojects a Shapely polygon within a GeoDataFrame to a target EPSG code.
+    Projects a Shapely polygon within a GeoDataFrame to a target EPSG code.
 
     Parameters:
     - gdf (geopandas.GeoDataFrame): Input GeoDataFrame containing the polygon.
@@ -38,8 +58,10 @@ def reproject_geodataframe(gdf, target_epsg):
     - geopandas.GeoDataFrame: Reprojected GeoDataFrame.
     """
     # Check if the geometry column exists and contains polygons
-    if 'geometry' not in gdf.columns or gdf['geometry'].geom_type.any() == 'Polygon':
-        raise ValueError("Input GeoDataFrame must contain a 'geometry' column with Polygon geometries.")
+    if ('geometry' not in gdf.columns or
+            gdf['geometry'].geom_type.any() == 'Polygon'):
+        raise ValueError("Input GeoDataFrame must contain a "
+                         "'geometry' column with Polygon geometries.")
 
     # Create a copy of the GeoDataFrame to avoid modifying the original
     gdf_copy = gdf.copy()
@@ -52,7 +74,9 @@ def reproject_geodataframe(gdf, target_epsg):
     transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
 
     # Reproject each polygon in the 'geometry' column
-    gdf_copy['geometry'] = gdf_copy['geometry'].apply(lambda geom: transform(transformer.transform, geom))
+    gdf_copy['geometry'] \
+        = gdf_copy['geometry'].apply(lambda geom:
+                                     transform(transformer.transform, geom))
 
     # Update the GeoDataFrame's coordinate reference system
     gdf_copy.crs = target_crs
@@ -60,7 +84,8 @@ def reproject_geodataframe(gdf, target_epsg):
     return gdf_copy
 
 
-def get_fishnet_grid(xmin, ymin, xmax, ymax, gridWidth, gridHeight):
+def get_fishnet_grid(xmin: float, ymin: float, xmax: float, ymax: float,
+                     gridWidth: float, gridHeight: float) -> gpd.GeoDataFrame:
     """
     Generate a fishnet grid of polygons within the specified bounding box.
 
@@ -89,12 +114,14 @@ def get_fishnet_grid(xmin, ymin, xmax, ymax, gridWidth, gridHeight):
             top = ymax - j * gridHeight
             bottom = top - gridHeight
 
-            polygon = Polygon([(left, top), (right, top), (right, bottom), (left, bottom), (left, top)])
+            polygon = Polygon([(left, top), (right, top), (right, bottom),
+                               (left, bottom), (left, top)])
             polygons.append(polygon)
 
     # Create a GeoDataFrame with the generated polygons
     gdf = gpd.GeoDataFrame(geometry=polygons, crs='EPSG:3857')
     return gdf
+
 
 def rotate_polygon_to_north_up(geometry):
     """
@@ -108,7 +135,7 @@ def rotate_polygon_to_north_up(geometry):
         angle (float): Angle of rotation.
     """
     exterior_coords_list = geometry.exterior.coords[:-1]
-    p1 = min(exterior_coords_list, key=lambda t:t[0])
+    p1 = min(exterior_coords_list, key=lambda t: t[0])
     ind_p1 = exterior_coords_list.index(p1)
     p2 = exterior_coords_list[ind_p1+1]
 
@@ -117,6 +144,7 @@ def rotate_polygon_to_north_up(geometry):
     rotated_geometry = rotate(geometry, -angle, origin=centroid)
 
     return rotated_geometry, angle
+
 
 def create_grid_within_polygon(geometry, x_frame_split, y_frame_split):
     """
@@ -132,28 +160,39 @@ def create_grid_within_polygon(geometry, x_frame_split, y_frame_split):
     """
     rotated_geometry, angle = rotate_polygon_to_north_up(geometry)
     min_x, min_y, max_x, max_y = rotated_geometry.bounds
-    print(f"\n\nmin x: {min_x}\nmin y: {min_y}\nmax_x: {max_x}\nmax_y: {max_y}")
+    print(f"\n\nmin x: {min_x}\nmin y: {min_y}\nmax_x: "
+          f"{max_x}\nmax_y: {max_y}")
 
     x_spacing = (max_x - min_x) / x_frame_split
     y_spacing = (max_y - min_y) / y_frame_split
 
-    grid_gdf = get_fishnet_grid(min_x, min_y, max_x, max_y, gridWidth=x_spacing, gridHeight=y_spacing)
+    grid_gdf = get_fishnet_grid(min_x, min_y, max_x, max_y,
+                                gridWidth=x_spacing, gridHeight=y_spacing)
 
     # Rotate each grid cell back to the original orientation
-    rotated_geometries = [rotate(geometry, angle, origin=(rotated_geometry.centroid.x, rotated_geometry.centroid.y))
+    rotated_geometries = [rotate(geometry, angle,
+                                 origin=(rotated_geometry.centroid.x,
+                                         rotated_geometry.centroid.y))
                           for geometry in grid_gdf['geometry']]
 
     grid_gdf['geometry'] = rotated_geometries
     return grid_gdf
 
-def grid_gdf_shift(input_gdf, x_y_reference):
+
+def grid_gdf_shift(input_gdf: gpd.GeoDataFrame,
+                   x_y_reference: tuple) -> gpd.GeoDataFrame:
         """
-        Applyes a shift on the geodataframe based on centroid offset.
-        The offset is calculated from an tuple reference coordindates and gdf centroid.
+        Applies a shift on the dataframe based on centroid offset.
+        The offset is calculated from a tuple reference coordinates
+        and gdf centroid.
         """
         grid_gdf_dissolve = input_gdf.dissolve()
-        grid_centroid = (grid_gdf_dissolve["geometry"].centroid.x, grid_gdf_dissolve["geometry"].centroid.y)
+        grid_centroid = (grid_gdf_dissolve["geometry"].centroid.x,
+                         grid_gdf_dissolve["geometry"].centroid.y)
         centroid_x_offset = x_y_reference[0] - grid_centroid[0]
         centroid_y_offset = x_y_reference[1] - grid_centroid[1]
-        grid_gdf = input_gdf.translate(xoff=float(centroid_x_offset), yoff=float(centroid_y_offset))
+        grid_gdf = input_gdf.translate(xoff=float(centroid_x_offset),
+                                       yoff=float(centroid_y_offset))
         grid_gdf = gpd.GeoDataFrame(geometry=gpd.GeoSeries(grid_gdf))
+
+        return grid_gdf
