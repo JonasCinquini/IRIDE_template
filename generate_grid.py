@@ -3,7 +3,19 @@ u"""
 Written by Enrico Ciraci'
 January 2024
 
-Test along/track grid generation procedure.
+Compute a regular grid along the provided satellite track.
+
+    1. Merge frames polygons into a single track polygon.
+    2. Compute the centroid of the track polygon.
+    3. Project the track polygon to 3857 Web Mercator Projection.
+    4. Rotate the track polygon to align it with the North-South direction.
+    5. Compute the trapezoid corners coordinates.
+    6. Compute the trapezoid diagonals equations.
+    7. Extend diagonals using a user define buffer.
+    8. Split the vertical and horizontal dimensions into a number of segments
+       defined by az_res and n_c parameters.
+    9. Compute the grid cells corners coordinates.
+    10. Generate output shapefile.
 
 positional arguments:
   input_file            Input file.
@@ -14,7 +26,11 @@ options:
                         Output directory.
   --buffer_dist BUFFER_DIST, -B BUFFER_DIST
                         Buffer distance.
+  --az_res AZ_RES, -R AZ_RES
+                        Cross track grid resolution (m).
+  --n_c N_C, -C N_C     Number of columns in the grid.
   --plot, -P            Plot intermediate results.
+
 
 Python Dependencies
 geopandas: Open source project to make working with geospatial data
@@ -22,22 +38,52 @@ geopandas: Open source project to make working with geospatial data
 pyproj: Python interface to PROJ (cartographic projections and coordinate
     transformations library):
     https://pyproj4.github.io/pyproj/stable/index.html
-shapely: Python package for manipulation and analysis of planar geometric
+shapely: Python package for manipulation and analy_sis of planar geometric
     objects: https://shapely.readthedocs.io/en/stable/
+matplotlib: Comprehensive library for creating static, animated, and
+    interactive visualizations in Python:
+    https://matplotlib.org
+
 """
 # -  Python Dependencies
 from __future__ import print_function
 import os
 import argparse
-import numpy as np
 from datetime import datetime
+import numpy as np
 import geopandas as gpd
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point
 from shapely.affinity import rotate
+from pyproj import CRS, Transformer
+from shapely.ops import transform
 import matplotlib.pyplot as plt
 from iride_csk_frame_grid_utils import (reproject_geodataframe,
                                         rotate_polygon_to_north_up)
 from PtsLine import PtsLine, PtsLineIntersect
+
+
+def reproject_geometry(geometry: Polygon | Point,
+                       source_epsg: int, target_epsg: int) -> Polygon | Point:
+    """
+    Reproject a Shapely geometry.
+    Args:
+        geometry: shapely.geometry.Polygon | shapely.geometry.Point
+        source_epsg: source EPSG code
+        target_epsg: target EPSG code
+
+    Returns: shapely.geometry.Polygon | shapely.geometry.Point
+    """
+    # Set up coordinate reference systems
+    target_crs = CRS.from_epsg(target_epsg)
+    # Create a transformer for the coordinate transformation
+    transformer = Transformer.from_crs(source_epsg, target_crs, always_xy=True)
+    try:
+        # - Polygon
+        return geometry.apply(lambda geom:
+                              transform(transformer.transform, geom))
+    except AttributeError:
+        # - Point
+        return transform(transformer.transform, geometry)
 
 
 def main() -> None:
@@ -70,40 +116,59 @@ def main() -> None:
     # - Parse arguments
     args = parser.parse_args()
 
+    # - Number of Cells
+    n_c = args.n_c        # - Along Track - Number of Columns
+    az_res = args.az_res  # - Cross Track Resolution (km) - Azimuth Resolution
+
     # - set path to input shapefile
     input_shapefile = args.input_file
-    #input_shapefile \
-    #    = os.path.join('.', 'data', 'csk_frame_map_italy_epsg4326_dissolve',
-    #                   'csk_frame_map_italy_epsg4326_dissolve.shp')
     output_f_name \
         = os.path.basename(input_shapefile).replace('.shp','_grid.shp')
     # - set path to output shapefile
     out_dir = args.out_dir
-    #out_dir = os.path.join(r'C:\Users\e.ciraci\Desktop\test')
     os.makedirs(out_dir, exist_ok=True)
 
     # - import input data
     gdf = gpd.read_file(input_shapefile)
     # - get input data crs
     source_crs = gdf.crs.to_epsg()
+    # - extract only needed columns
+    gdf = gdf[['geometry']]
 
-    # - Number of Cells
-    n_c = args.n_c        # - Along Track - Number of Columns
-    az_res = args.az_res  # - Cross Track Resolution (km) - Azimuth Resolution
+    # - remove z coordinate
+    no_z_coord = []
+    for _, row in gdf.iterrows():
+        # - remove z coordinate
+        z_coords = row['geometry'].exterior.coords[:-1]
+        no_z_coord.append(Polygon([(crd[0], crd[1]) for crd in z_coords]))
+    gdf['geometry'] = no_z_coord
 
-    # - Extract Polygon centroid
-    ll_centroid = (gdf['geometry'].centroid.x, gdf['geometry'].centroid.y)
+    # - Merge frames polygons into a single track polygon
+    gdf_t \
+        = (gpd.GeoDataFrame(geometry=[gdf.unary_union], crs=source_crs)
+           .explode(index_parts=False).reset_index(drop=True))
+
+    # - Compute Track Centroid - Need to reproject the track geometry
+    # - to minimize distortion in the calculation.
+    # - 1. Project to  WGS 84 Web Mercator Projection EPSG:3857
+    # - 2. Compute Centroid
+    r_geom \
+        = reproject_geometry(gdf_t['geometry'],
+                             source_crs, 3857).loc[0]
+    proj_centroid = Point(r_geom.centroid.x, r_geom.centroid.y)
+    ll_centroid = reproject_geometry(proj_centroid, 3857, source_crs)
+
     # - Longitude of the centroid - convert to radians
-    lat_cent = ll_centroid[1][0] * np.pi / 180
+    lat_cent = ll_centroid.y * np.pi / 180
     # - Estimate an average distortion factor associated to the
     # - usage of Web Mercator Projection (EPSG:3857)
     # - Reference: https://en.wikipedia.org/wiki/Mercator_projection
     d_scale = np.cos(lat_cent)
 
     # - reproject to  WGS 84 Web Mercator Projection EPSG:3857
-    gdf = reproject_geodataframe(gdf, 3857)
+    gdf = reproject_geodataframe(gdf_t, 3857)
 
-    # - remove z coordinate
+    # - If still present remove z coordinate
     d3_coord = gdf['geometry'].loc[0].exterior.coords[:-1]
     d2_coords = Polygon([(coord[0], coord[1]) for coord in d3_coord])
 
@@ -143,44 +208,44 @@ def main() -> None:
 
     # - Compute trapezoid diagonals equations
     # - Diagonal 1
-    ln1 = PtsLine(pt_ul[0], pt_ul[1], pt_lr[0], pt_lr[1])
+    ln_1 = PtsLine(pt_ul[0], pt_ul[1], pt_lr[0], pt_lr[1])
     # - Diagonal 2
-    ln2 = PtsLine(pt_ur[0], pt_ur[1], pt_ll[0], pt_ll[1])
+    ln_2 = PtsLine(pt_ur[0], pt_ur[1], pt_ll[0], pt_ll[1])
 
     # - Extend diagonals using a user define buffer
-    xs = []
-    ys = []
+    x_s = []
+    y_s = []
     # - Corner 1 - Upper Left
-    x1 = pt_ul[0] - args.buffer_dist
-    y1 = ln1.y(x1)
-    ul_ext = (x1, y1)
-    xs.append(x1)
-    ys.append(y1)
+    x_1 = pt_ul[0] - args.buffer_dist
+    y_1 = ln_1.y_val(x_1)
+    ul_ext = (x_1, y_1)
+    x_s.append(x_1)
+    y_s.append(y_1)
     # - Corner 2
-    x2 = pt_ur[0] + args.buffer_dist
-    y2 = ln2.y(x2)
-    ur_ext = (x2, y2)
-    xs.append(x2)
-    ys.append(y2)
+    x_2 = pt_ur[0] + args.buffer_dist
+    y_2 = ln_2.y_val(x_2)
+    ur_ext = (x_2, y_2)
+    x_s.append(x_2)
+    y_s.append(y_2)
     # - Corner 3
-    x3 = pt_lr[0] + args.buffer_dist
-    y3 = ln1.y(x3)
-    lr_ext = (x3, y3)
-    xs.append(x3)
-    ys.append(y3)
+    x_3 = pt_lr[0] + args.buffer_dist
+    y_3 = ln_1.y_val(x_3)
+    lr_ext = (x_3, y_3)
+    x_s.append(x_3)
+    y_s.append(y_3)
     # - Corner 4
-    x4 = pt_ll[0] - args.buffer_dist
-    y4 = ln2.y(x4)
-    ll_ext = (x4, y4)
-    xs.append(x4)
-    ys.append(y4)
-    xs.append(x1)
-    ys.append(y1)
+    x_4 = pt_ll[0] - args.buffer_dist
+    y_4 = ln_2.y_val(x_4)
+    ll_ext = (x_4, y_4)
+    x_s.append(x_4)
+    y_s.append(y_4)
+    x_s.append(x_1)
+    y_s.append(y_1)
 
     # - Trapezoid major axis equation
-    ln3 = PtsLine(ul_ext[0], ul_ext[1], ur_ext[0], ur_ext[1])
+    ln_3 = PtsLine(ul_ext[0], ul_ext[1], ur_ext[0], ur_ext[1])
     # - Trapezoid minor axis equation
-    ln4 = PtsLine(ll_ext[0], ll_ext[1], lr_ext[0], lr_ext[1])
+    ln_4 = PtsLine(ll_ext[0], ll_ext[1], lr_ext[0], lr_ext[1])
     # - Trapezoid left side equation
     ln5 = PtsLine(ul_ext[0], ul_ext[1], ll_ext[0], ll_ext[1])
     # - Trapezoid right side equation
@@ -193,8 +258,8 @@ def main() -> None:
     x_south = np.linspace(ll_ext[0], lr_ext[0], n_c+1)
 
     # - Evaluate the y coordinates of the grid vertical lines
-    y_north = ln3.y(x_north)
-    y_south = ln4.y(x_south)
+    y_north = ln_3.y_val(x_north)
+    y_south = ln_4.y_val(x_south)
 
     # - Compute grid number of rows
     n_r = int(np.ceil(((max(y_north) - min(y_south)) * d_scale) / az_res))
@@ -207,9 +272,9 @@ def main() -> None:
     x_vert_l = []
     x_vert_r = []
 
-    for y in y_vert:
-        x_vert_l.append(ln5.x(y))
-        x_vert_r.append(ln6.x(y))
+    for y_p in y_vert:
+        x_vert_l.append(ln5.x_val(y_p))
+        x_vert_r.append(ln6.x_val(y_p))
 
     # - Generate list of vertical and horizontal lines
     horiz_lines = [PtsLine(x_vert_l[i], float(y_vert[i]),
@@ -221,10 +286,10 @@ def main() -> None:
 
     # - Initialize Grid Corner Matrix
     corners_matrix = []
-    for hr in horiz_lines:
+    for h_r in horiz_lines:
         corners_horiz = []
-        for vr in vert_lines:
-            corners_horiz.append(PtsLineIntersect(hr, vr).intersect())
+        for v_r in vert_lines:
+            corners_horiz.append(PtsLineIntersect(h_r, v_r).intersection)
         corners_matrix.append(corners_horiz)
     # - Convert to numpy array
     corners_matrix = np.array(corners_matrix)
@@ -252,7 +317,7 @@ def main() -> None:
 
     if args.plot:
         # - Plot rotated geometry
-        fig, ax = plt.subplots(figsize=(5, 7))
+        _, ax = plt.subplots(figsize=(5, 7))
         ax.set_title('Rotated Geometry')
         ax.set_xlabel('Easting')
         ax.set_ylabel('Northing')
@@ -265,7 +330,7 @@ def main() -> None:
         ax.scatter(ur_ext[0], ur_ext[1], color='red')
         ax.scatter(lr_ext[0], lr_ext[1], color='red')
         ax.scatter(ll_ext[0], ll_ext[1], color='red')
-        ax.scatter(xs, ys, color='orange', marker='x')
+        ax.scatter(x_s, y_s, color='orange', marker='x')
         ax.plot([pt_ul[0], pt_lr[0]], [pt_ul[1], pt_lr[1]], color='cyan')
         ax.scatter(x_north, y_north, color='green')
         ax.scatter(x_south, y_south, color='green')
