@@ -313,6 +313,7 @@ def main() -> None:
                                  corners_matrix[i, j]])
             grid_geometry.append(rotate(Polygon(grid_corners[-1]), alpha,
                                         origin=centroid))
+
     # - Create GeoDataFrame and convert to original CRS
     d = {'index': np.arange(len(grid_rows)), 'rows': grid_rows,
          'col': grid_cols, 'geometry': grid_geometry}
