@@ -1,4 +1,4 @@
-IRIDE Service Segment Lot 2
+Map Italy - Along Track Grid
 ---
 [![Language][]][1]
 [![License][]][1]
@@ -7,74 +7,10 @@ IRIDE Service Segment Lot 2
 ### Naming Convention and Metadata
 
 ---
-
-#### Naming Convention - SE-S3-01
-**S3_01_SNT_01**
-
-Data delivery will be at burst level. Each burst will generate a product.
-Naming convention:
-- Track + Orbit Direction - 4 chars (3 + "A"/"D")
-- Burst - 4 chars
-- Swath - 3 char ("IW"+1)
-Example:
-ISS Product Name: ISS_S301SNT01_20180101_20220101_015A0250IW2_01.extension
-
----
-**S3_01_SNT_02**
-
-Data delivery will be at burst level. Each burst will generate a product.
-Naming convention:
-- Track + Orbit Direction - 4 chars (3 + "A"/"D")
-- Burst - 4 chars
-- Swath - 3 char ("IW"+1)
-Example:
-ISS Product Name: ISS_S301SNT02_20180101_20220101_015A0250IW2_01.extension
-
----
-**S3_01_SNT_03**
-
-Data will be delivered using a partition of the territory in square tiles, obtained in projection **ETRS89-extended/LAEA Europe (EPSG: 3035**). Each tile will be 100km x 100km wide. The tile's upper left corner coordinates will name the tile. Given the width of the tile, the upper left coordinates will be the points having this form: (XX00000, YY00000), and the relative tile identifier will be EXXNYY. The tiling system, in particular, is the same used in EGMS.
-Naming convention:
-- Tile identifier - 6 chars (see example below)
-- Component: 1 char ("V" or "E")
-Example:
-ISS Product Name: ISS_S301SNT03_20180101_20220101_E43N19V_01
-ISS Product Name: ISS_S301SNT03_20180101_20220101_E43N19E_01
-
----
-**S3_01_SNT_04**
-
-In this case, a single dataset per track will be delivered.
-Naming convention:
-- Track + Orbit Direction - 4 chars (3 + "A"/"D")
-Example:
-ISS Product Name: ISS_S301SNT04_20180101_20220101_015A_01
-
----
-**COSMO-SkyMed**
-
-In this case, InSAR data generated per each of the considered CSK frames will be distributed employing a track-specific grid (i.e., once generated, the PS data is cropped using a grid aligned with the satellite track - see figures below). 
-
-A unique ID will identify each grid cell.
-
-NOTE 1: PS/DS products will be cropped using the grid, not the input SAR data. The PS calculation will still be performed at the frame level.
-
-NOTE 2: the case presented below constitutes an example of the grid we will generate and distribute. We will likely define a grid with larger cells.
-
 <img src="images/csk_frame_grid.png" class="align-center" style="width:50.0%" alt="image" />
 <img src="images/csk_frame_grid_zoom.png" class="align-center" style="width:50.0%" alt="image" />
-
 ---
 
-# Metadata
-### Sentinel-1
-
-- **ISS_S301SNT01_2018-01-05_2022-12-28_08710208VVA_01.csv** - metadata file example for **S3-01-SNT-01** geospatial products.
-- **ISS_S301SNT03_20180105_20221228_100ME43N18V_01.csv** - metadata file example for **S3-01-SNT-03** geospatial thematic products.
-
-
-
----
 
 ### CSK Areas Of Interest
 

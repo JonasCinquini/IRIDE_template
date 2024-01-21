@@ -105,7 +105,7 @@ def main() -> None:
     # - Number of Cells
     # - Along Track
     parser.add_argument('--az_res', '-R', type=float,
-                        help='Cross track grid resolution (m).',
+                        help='Cross track grid resolution (m) [def. 5e3m].',
                         default=5e3)
     # - Cross Track Resolution
     parser.add_argument('--n_c', '-C', type=float,
@@ -300,8 +300,12 @@ def main() -> None:
     # - Compute grid cells corners coordinates & generate output dataframe
     grid_corners = []
     grid_geometry = []
+    grid_rows = []
+    grid_cols = []
     for i in range(n_rows - 1):
         for j in range(n_cols - 1):
+            grid_rows.append(i)
+            grid_cols.append(j)
             grid_corners.append([corners_matrix[i, j],
                                  corners_matrix[i, j + 1],
                                  corners_matrix[i + 1, j + 1],
@@ -309,12 +313,15 @@ def main() -> None:
                                  corners_matrix[i, j]])
             grid_geometry.append(rotate(Polygon(grid_corners[-1]), alpha,
                                         origin=centroid))
+
     # - Create GeoDataFrame and convert to original CRS
-    grid_gdf = gpd.GeoDataFrame(geometry=grid_geometry, crs='EPSG:3857')
+    d = {'index': np.arange(len(grid_rows)), 'rows': grid_rows,
+         'col': grid_cols, 'geometry': grid_geometry}
+    grid_gdf = gpd.GeoDataFrame(d, crs='EPSG:3857').set_index('index')
     grid_gdf = reproject_geodataframe(grid_gdf, source_crs)
 
     # - Save grid to shapefile
-    grid_gdf.to_file(os.path.join(out_dir, output_f_name))
+    grid_gdf.to_file(os.path.join(out_dir, str(output_f_name)))
 
     if args.plot:
         # - Plot rotated geometry
