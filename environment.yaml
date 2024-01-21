@@ -5,7 +5,6 @@ dependencies:
   - cartopy
   - gdal
   - matplotlib
-  - netCDF4
   - numpy
   - pip
   - pyproj
@@ -15,9 +14,8 @@ dependencies:
   - pandas
   - geopandas
   - shapely
-  - rasterio
-  - xarray
   - flake8
   - pytest
-  - pydantic
   - pytest-cov
+  - codecov
+  - coverage

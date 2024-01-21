@@ -13,20 +13,22 @@ class PtsLine:
     """
     Class to compute the equation of a line passing through two points.
     """
-    def __init__(self, x1: float, y1: float,
-                 x2: float, y2: float) -> None:
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
-        self.m = (y2 - y1) / (x2 - x1)
-        self.q = y1 - (self.m * x1)
+    def __init__(self, x_pt1: float, y_pt1: float,
+                 x_pt2: float, y_pt2: float) -> None:
+        self.x_1 = x_pt1
+        self.y_1 = y_pt1
+        self.x_2 = x_pt2
+        self.y_2 = y_pt2
+        self.m_val = (y_pt2 - y_pt1) / (x_pt2 - x_pt1)
+        self.q_val = y_pt1 - (self.m_val * x_pt1)
 
-    def y(self, x: float | np.ndarray) -> float | np.ndarray:
-        return self.m * x + self.q
+    def y_val(self, x_pt: float | np.ndarray) -> float | np.ndarray:
+        """Return the y coordinate of the line at the given x coordinate."""
+        return self.m_val * x_pt + self.q_val
 
-    def x(self, y: float | np.ndarray) -> float | np.ndarray:
-        return (y - self.q) / self.m
+    def x_val(self, y_pt: float | np.ndarray) -> float | np.ndarray:
+        """Return the x coordinate of the line at the given y coordinate."""
+        return (y_pt - self.q_val) / self.m_val
 
 
 class PtsLineIntersect:
@@ -35,13 +37,22 @@ class PtsLineIntersect:
     two points.
     """
     def __init__(self, line_1: PtsLine, line_2: PtsLine) -> None:
-        self.m1 = line_1.m
-        self.q1 = line_1.q
-        self.m2 = line_2.m
-        self.q2 = line_2.q
+        self.m_1 = line_1.m_val
+        self.q_1 = line_1.q_val
+        self.m_2 = line_2.m_val
+        self.q_2 = line_2.q_val
 
-    def intersect(self) -> tuple[float, float]:
-        x = (self.q2 - self.q1) / (self.m1 - self.m2)
-        y = self.m1 * x + self.q1
-        return x, y
-
+    @property
+    def intersection(self) -> tuple[float, float]:
+        """
+        Compute the intersection point of two lines.
+        Returns: Coordinates of the intersection point tuple[float, float].
+        """
+        x_c = None
+        y_c = None
+        try:
+            x_c = (self.q_2 - self.q_1) / (self.m_1 - self.m_2)
+            y_c = self.m_1 * x_c + self.q_1
+        except ZeroDivisionError:
+            print("# - Lines are parallel.")
+        return x_c, y_c
