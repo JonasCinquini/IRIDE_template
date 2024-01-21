@@ -19,5 +19,6 @@ dependencies:
   - xarray
   - flake8
   - pytest
-  - pydantic
   - pytest-cov
+  - codecov
+  - coverage
