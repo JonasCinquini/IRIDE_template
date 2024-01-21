@@ -17,6 +17,7 @@ Compute a regular grid along the provided satellite track.
     9. Compute the grid cells corners coordinates.
     10. Generate output shapefile.
 
+
 positional arguments:
   input_file            Input file.
 
