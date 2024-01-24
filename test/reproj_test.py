@@ -2,7 +2,7 @@
 """ Unit tests for the reproject_geometry function. """
 import pytest
 from shapely.geometry import Point, Polygon
-from generate_grid import reproject_geometry
+from reproject_geometry import reproject_geometry
 
 @pytest.fixture
 def example_polygon():
