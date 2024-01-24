@@ -12,6 +12,9 @@ import numpy as np
 class PtsLine:
     """
     Class to compute the equation of a line passing through two points.
+    Note: this class does not check if:
+    - the two points are the same
+    - the two points are aligned [Vertical or Horizontal Line]
     """
     def __init__(self, x_pt1: float, y_pt1: float,
                  x_pt2: float, y_pt2: float) -> None:
