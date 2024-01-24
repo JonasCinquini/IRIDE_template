@@ -29,8 +29,6 @@ def main() -> None:
         print(row['geometry'].is_valid)
 
 
-
-
 # - run main program
 if __name__ == '__main__':
     start_time = datetime.now()
