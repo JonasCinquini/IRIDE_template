@@ -119,7 +119,7 @@ def main() -> None:
                   ncols=100):
         # - Extract data relative to a certain sub-track
         p_gdf = gdf[gdf['Path'] == p].reset_index(drop=True)
-        gdf_grid = generate_grid(p_gdf, n_c=n_c,
+        gdf_grid = generate_grid(p_gdf.copy(), n_c=n_c,
                                  az_res=az_res,
                                  buffer_dist=buffer_dist)
 
