@@ -21,6 +21,7 @@ from shapely.ops import transform
 from shapely.geometry import Polygon
 from shapely.affinity import rotate
 from math import ceil
+from typing import Tuple
 
 
 def add_frame_code_field(grid_gdf):
@@ -123,10 +124,13 @@ def get_fishnet_grid(xmin: float, ymin: float, xmax: float, ymax: float,
     return gdf
 
 
-def rotate_polygon_to_north_up(geometry):
+def rotate_polygon_to_north_up(geometry: Polygon) -> Tuple[Polygon, float]:
     """
     Rotate a polygon to align its orientation with the north.
 
+    NOTE: The function assumes that the polygon has approximately
+        a rectangular shape. The rotation angle is calculated
+        based on the orientation of the shorted side of the polygon.
     Parameters:
         geometry (Polygon): Input polygon.
 
@@ -135,9 +139,27 @@ def rotate_polygon_to_north_up(geometry):
         angle (float): Angle of rotation.
     """
     exterior_coords_list = geometry.exterior.coords[:-1]
-    p1 = min(exterior_coords_list, key=lambda t: t[0])
-    ind_p1 = exterior_coords_list.index(p1)
-    p2 = exterior_coords_list[ind_p1+1]
+    # - Find the lowest corner in the north-south direction
+    p_south = min(exterior_coords_list, key=lambda t: t[1])
+
+    # - Find the furthest corners in the x-direction
+    # - to approximate the orientation of the polygon
+    p_east = max(exterior_coords_list, key=lambda t: t[0])
+    ind_p_east = exterior_coords_list.index(p_east)
+    p_west = min(exterior_coords_list, key=lambda t: t[0])
+    ind_p_west = exterior_coords_list.index(p_west)
+
+    # - Find the corner closest to the south corner
+    # - to approximate the orientation of the polygon
+    dist_east = math.sqrt((p_south[0] - p_east[0])**2
+                          + (p_south[1] - p_east[1])**2)
+    dist_west = math.sqrt((p_south[0] - p_west[0])**2
+                          + (p_south[1] - p_west[1])**2)
+    p1 = p_south
+    if dist_east < dist_west:
+        p2 = exterior_coords_list[ind_p_east]
+    else:
+        p2 = exterior_coords_list[ind_p_west]
 
     angle = math.degrees(math.atan2(p2[1] - p1[1], p2[0] - p1[0]))
     centroid = (geometry.centroid.x, geometry.centroid.y)
