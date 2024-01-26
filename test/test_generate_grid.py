@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+""" Unit tests for the generate_grid function. """
 import geopandas as gpd
 from shapely.geometry import Polygon
 from generate_grid import generate_grid
