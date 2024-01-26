@@ -1,2 +1,2 @@
 #!/bin/sh
-python generate_grid.py ./data/shapefiles/csk_frame_map_italy_epsg4326.shp --out_dir="/Users/enricociraci/Desktop/test"
+python generate_grid.py C:\Users\e.ciraci\Desktop\MapItaly\146.shp --out_dir="C:\Users\e.ciraci\Desktop\MapItaly\test" --plot
