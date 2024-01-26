@@ -3,8 +3,8 @@ u"""
 Written by Enrico Ciraci'
 January 2024
 
-Generate a regular grid along each of COSMO-SkyMed tracks
-from the MapItaly project.
+Generate a regular grid along each COSMO-SkyMed track from
+the ASI MapItaly project.
 
 See generate_grid.py for more details about the grid generation algorithm.
 
@@ -54,6 +54,7 @@ from datetime import datetime
 from tqdm import tqdm
 import geopandas as gpd
 from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
 import cartopy.crs as ccrs
 # - Custom Dependencies
 from generate_grid import generate_grid
@@ -76,7 +77,7 @@ def main() -> None:
                         help='Output directory.', default=os.getcwd())
     # - Buffer distance
     parser.add_argument('--buffer_dist', '-B', type=float,
-                        help='Buffer distance.', default=2e3)
+                        help='Buffer distance.', default=5e3)
     # - Number of Cells
     # - Along Track
     parser.add_argument('--az_res', '-R', type=float,
@@ -158,12 +159,29 @@ def main() -> None:
             gdf_grid.plot(ax=ax, linewidth=0.2,
                           facecolor="none", edgecolor="b", zorder=2)
             p_gdf.plot(ax=ax, linewidth=0.1,
-                       facecolor="r", edgecolor="r", zorder=1, alpha=0.5)
+                       facecolor="r", edgecolor="r", zorder=1)
             ax.set_extent(extent)
-            gl = ax.gridlines(draw_labels=True)
+            gl = ax.gridlines(draw_labels=True, linewidth=0.4, color='k',
+                              alpha=0.7, linestyle='--')
             gl.top_labels = False
             gl.right_labels = False
             ax.set_title(f"{sat} - {p} - {s_mode} - {pass_geom}")
+            # place a text box in upper left in axes coords
+            text_str = f"{buffer_dist / 1e3} km buffer."
+            props = dict(boxstyle='square', facecolor='wheat',
+                         alpha=0.5)
+            plt.text(5.5, 47.7, text_str, transform=ccrs.PlateCarree(),
+                     fontsize=6, verticalalignment='top', weight='bold',
+                     bbox=props)
+
+            lc_colors = {
+                'MapItaly Track': "r",  # value=0
+                'AT Grid': "b",  # value=1
+            }
+            labels, handles = zip(
+                *[(k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v)) for k, v
+                  in lc_colors.items()])
+            ax.legend(handles, labels, loc=4, framealpha=1)
             plt.savefig(os.path.join(out_dir, f"{out_name}"
                                      .replace(".shp", ".png")),
                         dpi=300, bbox_inches='tight')

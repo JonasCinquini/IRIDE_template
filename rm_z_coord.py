@@ -6,7 +6,8 @@ Written by Enrico Ciraci'
 January 2024
 
 Remove z coordinate from a GeoDataFrame.
-Convert a GeoDataFrame with z coordinate to a GeoDataFrame without z coordinate.
+Convert a GeoDataFrame with z coordinate to a GeoDataFrame
+without z coordinate.
 """
 
 
