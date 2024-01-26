@@ -34,6 +34,12 @@ Map Italy - Along Track Grid
 - [geopandas: add support for geographic data to pandas objects.][]
 - [matplotlib: Library for creating static, animated, and interactive visualizations in Python.][]
 
+## License
+
+The content of this project is licensed under the [Creative Commons
+Attribution 4.0 Attribution license][] and the source code is licensed
+under the [MIT license][].
+
 
 [Language]: https://img.shields.io/badge/python-%3E%3D%203.10-blue
 [License]: https://img.shields.io/bower/l/MI
@@ -52,3 +58,5 @@ Map Italy - Along Track Grid
 [pandas: Python Data Analysis Library.]:https://pandas.pydata.org/
 [geopandas: add support for geographic data to pandas objects.]:https://geopandas.org/en/stable/
 [matplotlib: Library for creating static, animated, and interactive visualizations in Python.]:https://matplotlib.org
+[Creative Commons Attribution 4.0 Attribution license]: https://creativecommons.org/licenses/by/4.0/
+[MIT license]: LICENSE
