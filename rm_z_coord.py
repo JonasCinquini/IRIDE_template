@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import geopandas as gpd
-from shapely.geometry import Polygon
 """
 Written by Enrico Ciraci'
 January 2024
@@ -9,6 +7,8 @@ Remove z coordinate from a GeoDataFrame.
 Convert a GeoDataFrame with z coordinate to a GeoDataFrame
 without z coordinate.
 """
+import geopandas as gpd
+from shapely.geometry import Polygon
 
 
 def rm_z_coord(gdf) -> gpd.GeoDataFrame:
