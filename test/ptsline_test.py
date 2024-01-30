@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 from PtsLine import PtsLine, PtsLineIntersect
 
+
 @pytest.fixture
 def example_lines():
     """Return two lines that intersect at (1, 1)."""

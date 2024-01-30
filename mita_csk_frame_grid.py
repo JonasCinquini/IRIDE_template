@@ -12,9 +12,9 @@ geopandas: Open source project to make working with geospatial data
 
 import os
 import geopandas as gpd
-from iride_csk_frame_grid_utils import (reproject_geodataframe,
-                                        create_grid_within_polygon,
-                                        add_frame_code_field)
+from mita_csk_frame_grid_utils import (reproject_geodataframe,
+                                       create_grid_within_polygon,
+                                       add_frame_code_field)
 
 
 def grid_from_area(input_shapefile: str, output_folder: str,

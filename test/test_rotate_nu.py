@@ -1,7 +1,5 @@
-import geopandas as gpd
 from shapely.geometry import Polygon
-from iride_csk_frame_grid_utils import rotate_polygon_to_north_up
-from math import isclose
+from mita_csk_frame_grid_utils import rotate_polygon_to_north_up
 
 
 def test_rotate_polygon_to_north_up():
