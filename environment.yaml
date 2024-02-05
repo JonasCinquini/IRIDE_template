@@ -19,3 +19,7 @@ dependencies:
   - pytest-cov
   - codecov
   - coverage
+  - pyogrio
+  - pyarrow
+  - dask
+  - dask-geopandas
