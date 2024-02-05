@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 Written by Jonas Cinquini
 January 2024
