@@ -11,12 +11,12 @@ from distribute_ps_grid import distribute_ps_grid
 def test_distribute_ps_grid():
     # - import sample data
     input_file \
-        = os.path.join('..', 'data', 'shapefiles',
+        = os.path.join('.', 'data', 'shapefiles',
                        'csk_ps_sample_Nocera_Terinese_A_epsg4326.shp')
 
     # - Import CSK Along Track Grid
     grid_file \
-        = os.path.join('..', 'data', 'shapefiles',
+        = os.path.join('.', 'data', 'shapefiles',
                        'grid_CSG2_151_STR-007_ASC.shp')
     # -  Call the function
     result = distribute_ps_grid(input_file, grid_file)
@@ -35,12 +35,12 @@ def test_large_dataset_performance():
     start_time = time.time()
     # - import sample data
     input_file \
-        = os.path.join('..', 'data', 'shapefiles',
+        = os.path.join('.', 'data', 'shapefiles',
                        'csk_ps_sample_Nocera_Terinese_A_epsg4326.shp')
 
     # - Import CSK Along Track Grid
     grid_file \
-        = os.path.join('..', 'data', 'shapefiles',
+        = os.path.join('.', 'data', 'shapefiles',
                        'grid_CSG2_151_STR-007_ASC.shp')
     # -  Call the function
     _ = distribute_ps_grid(input_file, grid_file)

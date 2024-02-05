@@ -63,4 +63,4 @@ jobs:
         working-directory: ./
         run: |
           cd test
-          python -m pytest --import-mode=append
+          python -m pytest --import-mode=append test/
