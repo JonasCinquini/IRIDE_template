@@ -12,12 +12,12 @@ import numpy as np
 class PtsLine:
     """
     Class to compute the equation of a line passing through two points.
-    Note: this class does not check if:
-    - the two points are the same
-    - the two points are aligned [Vertical or Horizontal Line]
     """
     def __init__(self, x_pt1: float, y_pt1: float,
                  x_pt2: float, y_pt2: float) -> None:
+        if x_pt1 == x_pt2 and y_pt1 == y_pt2:
+            raise ValueError("The input points are the same. "
+                             "A line cannot be defined by a single point.")
         self.x_1 = x_pt1
         self.y_1 = y_pt1
         self.x_2 = x_pt2
@@ -31,7 +31,31 @@ class PtsLine:
 
     def x_val(self, y_pt: float | np.ndarray) -> float | np.ndarray:
         """Return the x coordinate of the line at the given y coordinate."""
+        if self.m_val == 0:
+            return np.inf
         return (y_pt - self.q_val) / self.m_val
+
+    @property
+    def slope(self) -> float:
+        return self.m_val
+
+    @property
+    def intercept(self) -> float:
+        return self.q_val
+
+    @property
+    def distance(self) -> float:
+        return np.sqrt((self.x_2 - self.x_1)**2 + (self.y_2 - self.y_1)**2)
+
+    @property
+    def midpoint(self) -> tuple[float, float]:
+        return (self.x_1 + self.x_2) / 2, (self.y_1 + self.y_2) / 2
+
+    def is_parallel_to(self, other_line: 'PtsLine') -> bool:
+        return np.isclose(self.m_val, other_line.m_val)
+
+    def is_perpendicular_to(self, other_line: 'PtsLine') -> bool:
+        return np.isclose(-1, self.m_val * other_line.m_val)
 
 
 class PtsLineIntersect:
